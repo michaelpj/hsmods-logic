@@ -1,0 +1,66 @@
+.symbol_type Entity
+.symbol_type Scope
+.symbol_type Name
+.type QName = [
+  prefix : QName,
+  tail : Name 
+]
+
+
+.decl Defines(s: Scope, n: Name, e: Entity)
+
+// Defines(s, e, N) :- member(i, s) , i = 'import M as N' , refersTo(M, e)
+
+.decl Enclosing(scope: Scope, enclosing: Scope)
+
+.decl Visible(scope: Scope, name: Name, entity: Entity)
+
+Visible(s, n, e) :- Defines(s, n, e).
+Visible(s, n, e) :- !Defines(s, n, _), Imports(s, n, e).
+Visible(s, n, e) :- !Defines(s, n, _), Enclosing(s, s2), Visible(s2, n, e).
+
+.decl ImportsFrom(scope: Scope, name: QName)
+
+.decl Imports(scope: Scope, name: Name, entity: Entity)
+Imports(s, n, e) :- ImportsFrom(s, qn), RefersTo(s, qn, m), ModuleScope(m, s2), Exports(s2, n, e).
+
+.decl ExportSpec(scope: Scope, name: Name)
+
+.decl Exports(scope: Scope, name: Name, entity: Entity)
+// We export a binding if it is visible, and either 
+// - we specify that we export it, or 
+// - we do not specify that we export anything
+Exports(s, n, e) :- (ExportSpec(s,n) ; !ExportSpec(s, _)), Visible(s, n, e).
+
+.decl RefersTo(scope: Scope, name: QName, entity: Entity)
+
+RefersTo(s, [p, n], e) :- RefersTo(s, p, m), ModuleScope(m, s2), Exports(s2, n, e).
+RefersTo(s, [nil, n], e) :- Visible(s, n, e).
+
+.decl ModuleScope(module: Entity, scope: Scope)
+
+// outer scope S1
+Defines("S1", "M1", "M1").
+ModuleScope("M1", "S2").
+Enclosing("S2", "S1").
+
+Defines("S1", "M2", "M2").
+ModuleScope("M2", "S3").
+Enclosing("S3", "S1").
+
+Defines("S1", "T", "T").
+Defines("S1", "U", "U").
+// no export spec, exports everything
+
+// inner scope S2
+// shadows enclosing definition of U from S1
+Defines("S2", "U", "U2").
+// only exports T
+ExportSpec("S2", "T").
+
+// inner scope S3
+ImportsFrom("S3", [nil, "M1"]).
+
+.output Visible
+.output Exports
+.output RefersTo
