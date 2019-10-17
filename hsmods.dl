@@ -1,0 +1,80 @@
+/// Names
+
+.symbol_type Name
+.symbol_type ModName
+.symbol_type QName 
+
+.decl unqualName(qn: QName, n: Name)
+.decl qualName(qn: QName, mn: ModName, n: Name)
+
+.decl qnQual(qn: QName, mn: ModName)
+qnQual(qn, mn) :- qualName(qn, mn, _).
+
+.decl qnName(qn: QName, n: Name)
+qnName(qn, n) :- unqualName(qn, n).
+qnName(qn, n) :- qualName(qn, _, n).
+
+//// Entities
+
+.symbol_type Entity
+
+.symbol_type Module
+.symbol_type Import
+
+// TODO: specs
+.decl modName(mod: Module, name: ModName)
+.decl modImports(mod: Module, import: Import)
+.decl modDefines(mod: Module, name: Name, entity: Entity)
+
+.decl exportExportsMod(mod: Module, name: ModName)
+.decl exportExportsName(mod: Module, name: QName)
+
+.decl importQualified(import: Import)
+.decl importAs(import: Import, name: ModName)
+.decl importSource(import: Import, mod: Module)
+.decl importImportsName(import: Import, name: Name)
+
+.decl exportHasSpec(mod: Module)
+exportHasSpec(m) :- exportExportsMod(m, _).
+exportHasSpec(m) :- exportExportsName(m, _).
+
+.decl exports(mod: Module, name: Name, entity: Entity)
+exports(m, n, e) :- !exportHasSpec(m), modDefines(m, n, e).
+exports(m, n, e) :-
+           qnName(qn, n),
+           exportExportsName(m, qn), inScope(m, qn, e).
+exports(m, n, e) :-
+           qualName(qn, mn, n), unqualName(qn2, n),
+           exportExportsMod(m, mn), inScope(m, qn, e), inScope(m, qn2, e).
+
+.decl importImports(import: Import, name: QName, entity: Entity)
+importImports(i, qn, e) :-
+           qualName(qn, mn, n),
+           importAs(i, mn), importIncoming(i, n, e).
+importImports(i, qn, e) :-
+           unqualName(qn, n),
+           !importQualified(i), importIncoming(i, n, e).
+
+.decl importIncoming(import: Import, name: Name, entity: Entity)
+importIncoming(i, n, e) :- importSource(i, m), exports(m, n, e), (importImportsName(i,n); !importHasSpec(i)).
+
+.decl importHasSpec(import: Import)
+importHasSpec(i) :- importImportsName(i, _).
+
+.decl inScope(mod: Module, name: QName, entity: Entity)
+inScope(m, qn, e) :-
+           qualName(qn, mn, n),
+           modDefines(m, n, e), modName(m, mn).
+inScope(m, qn, e) :-
+           unqualName(qn, n),
+           modDefines(m, n, e).
+inScope(m, qn, e) :- modImports(m, i), importImports(i, qn, e).
+
+//// Example program
+
+.input unqualName
+.input qualName
+.input importsFrom
+.input modDefines
+
+.output inScope

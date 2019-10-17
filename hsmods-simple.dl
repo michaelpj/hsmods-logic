@@ -1,0 +1,49 @@
+/// Names
+
+.symbol_type Name
+.symbol_type ModName
+.symbol_type QName 
+
+// Corresponds to:
+// data QName = QualName ModName Name | UnqualName Name
+.decl unqualName(qn: QName, n: Name)
+.decl qualName(qn: QName, mn: ModName, n: Name)
+
+//// Entities
+
+.symbol_type Entity
+
+.symbol_type Module
+
+//// Rules
+
+.decl modDecl(mod: Module, name: ModName)
+
+.decl modDefines(mod: Module, name: Name, entity: Entity)
+
+.decl inScope(mod: Module, name: QName, entity: Entity)
+inScope(m, qn, e) :- qualName(qn, mn, n), refersTo(mn, m), exports(m, n, e).
+inScope(m, qn, e) :- unqualName(qn, n), modDefines(m, n, e).
+inScope(m, qn, e) :- imports(m, qn, e). 
+
+.decl importsFrom(mod: Module, name: ModName)
+
+.decl imports(mod: Module, name: QName, entity: Entity)
+imports(m, qn, e) :- unqualName(qn, n), importsFrom(m, mn), refersTo(mn, m), exports(m, n, e).
+
+.decl exports(mod: Module, name: Name, entity: Entity)
+exports(m, n, e) :- modDefines(m, n, e).
+
+.decl refersTo(mn: ModName, m: Module)
+refersTo(mn, m) :- modDecl(m, mn).
+
+//// IO
+
+.input unqualName
+.input qualName
+
+.input importsFrom
+.input modDefines
+.input modDecl
+
+.output inScope
