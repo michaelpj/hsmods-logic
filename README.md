@@ -18,3 +18,16 @@ There are some examples in the subdirectory, which can be run for example by run
 ```
 souffle modules-simple.dl -F simple -D -
 ```
+
+## Notes on the implementations
+
+Souffle does have records, but they're rubbish. So we do the usual trick of emulating an
+ADT by using some placeholder type for the entity (in our case, it's all strings), and having
+one relation for each alternative. Then you use the relation to "pattern match" on the alternative.
+If you turned this into inference rules you would just use proper ADTs there.
+
+(Don't have a paper from Semmle to cite for this, but it's their idea.)
+
+Since we're using strings for everything, we mimic the syntax: e.g. if we want to have an
+entity representing the import `import A as B` we use `"import A as B"`. Gross, but it actually
+helps a lot with readability too.
