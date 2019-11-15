@@ -7,13 +7,6 @@
 .decl unqualName(qn: QName, n: Name)
 .decl qualName(qn: QName, mn: ModName, n: Name)
 
-.decl qnQual(qn: QName, mn: ModName)
-qnQual(qn, mn) :- qualName(qn, mn, _).
-
-.decl qnName(qn: QName, n: Name)
-qnName(qn, n) :- unqualName(qn, n).
-qnName(qn, n) :- qualName(qn, _, n).
-
 //// Entities
 
 .symbol_type Entity
