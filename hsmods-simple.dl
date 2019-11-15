@@ -17,8 +17,10 @@
 
 //// Rules
 
+// defines the name of a module
 .decl modDecl(mod: Module, name: ModName)
 
+// basic module definition relation
 .decl modDefines(mod: Module, name: Name, entity: Entity)
 
 .decl inScope(mod: Module, name: QName, entity: Entity)
@@ -26,6 +28,7 @@ inScope(m, qn, e) :- qualName(qn, mn, n), refersTo(mn, m), exports(m, n, e).
 inScope(m, qn, e) :- unqualName(qn, n), modDefines(m, n, e).
 inScope(m, qn, e) :- imports(m, qn, e). 
 
+// true if `<mod>` has `import <name>`
 .decl importsFrom(mod: Module, name: ModName)
 
 .decl imports(mod: Module, name: QName, entity: Entity)

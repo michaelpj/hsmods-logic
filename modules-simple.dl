@@ -16,6 +16,7 @@
 
 //// Rules
 
+// basic module definition relation
 .decl modDefines(m: Module, n: Name, e: Entity)
 
 .decl enclosing(mod: Module, enclosing: Module)
@@ -26,6 +27,7 @@ inScope(m, n, e) :- modDefines(m, n, e).
 inScope(m, n, e) :- imports(m, n, e).
 inScope(m, n, e) :- !modDefines(m, n, _), enclosing(m, m2), inScope(m2, n, e).
 
+// true if `<mod>` has `import <name>`
 .decl importsFrom(mod: Module, name: QName)
 
 .decl imports(mod: Module, name: Name, entity: Entity)
